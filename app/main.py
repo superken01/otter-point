@@ -57,30 +57,22 @@ async def root():
     return {}
 
 
-wallet_vault_snapshot_cte = """
-WITH "WalletVaultSnapshot" AS (
-    SELECT
-        wvs.*,
-        vsb.*
-    FROM public."WalletVaultSnapshot" wvs
-    JOIN public."VaultSnapshotBlock" vsb ON wvs."vaultSnapshotBlockId" = vsb.id
-)
-"""
-
-
 @app.get("/otter-point", summary="Get otter point.", description="Get otter point.")
 async def get_otter_point(
     conn: Annotated[AsyncConnection, Depends(get_db_conn)],
     wallet_address: Annotated[str, Depends(get_user_wallet_address)],
 ):
 
+    # wallet_address = "0x41a539B1b75962d01C874ec6f960FCf57C41bD58"
+    # wallet_address = "0x41a539B1b75962d01C874ec6f960FCf57C41bD59"
+
     cur = conn.cursor()
     await cur.execute(
         """
         SELECT "ReferrerUser"."walletAddress"
         FROM "Referral"
-        JOIN "User" AS "RefereeUser" ON "Referral"."refereeUserId" = "RefereeUser".id
-        JOIN "User" AS "ReferrerUser" ON "Referral"."referrerUserId" = "ReferrerUser".id
+        LEFT JOIN "User" AS "RefereeUser" ON "Referral"."refereeUserId" = "RefereeUser".id
+        LEFT JOIN "User" AS "ReferrerUser" ON "Referral"."referrerUserId" = "ReferrerUser".id
         WHERE "RefereeUser"."walletAddress" = %s
         """,
         (wallet_address,),
@@ -90,22 +82,20 @@ async def get_otter_point(
 
     await cur.execute(
         f"""
-        {wallet_vault_snapshot_cte}
         SELECT SUM(amount * rate / 1000000000000000000 * price / 100000000)
-        FROM "WalletVaultSnapshot"
-        WHERE "WalletVaultSnapshot"."address" = %s
+        FROM "WalletVaultSnapshot" AS wvs
+        JOIN "VaultSnapshotBlock" AS vsb ON wvs."vaultSnapshotBlockId" = vsb.id
+        WHERE wvs."address" = %s
         """,
         (wallet_address,),
     )
     row = await cur.fetchone()
-    earned_amount = row[0] if row else 0
+    earned_amount = row[0] if row[0] else 0
 
     referral_amount = 0
-
     await cur.execute(
         """
-        SELECT
-            SUM(wvs.amount * vsb.rate / 1000000000000000000 * vsb.price / 100000000)
+        SELECT SUM(wvs.amount * vsb.rate / 1000000000000000000 * vsb.price / 100000000)
         FROM "User"
         JOIN "Referral" ON "User".id = "Referral"."referrerUserId"
         JOIN "User" AS "RefereeUser" ON "Referral"."refereeUserId" = "RefereeUser".id
@@ -117,7 +107,7 @@ async def get_otter_point(
         (wallet_address,),
     )
     row = await cur.fetchone()
-    referral_amount = row[0] if row else 0
+    referral_amount = row[0] if row[0] else 0
 
     total_amount = earned_amount + referral_amount
 
