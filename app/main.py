@@ -57,7 +57,6 @@ async def root():
     return {}
 
 
-# WalletVaultSnapshot cte
 wallet_vault_snapshot_cte = """
 WITH "WalletVaultSnapshot" AS (
     SELECT
@@ -72,12 +71,10 @@ WITH "WalletVaultSnapshot" AS (
 @app.get("/otter-point", summary="Get otter point.", description="Get otter point.")
 async def get_otter_point(
     conn: Annotated[AsyncConnection, Depends(get_db_conn)],
-    # wallet_address: Annotated[str, Depends(get_user_wallet_address)],
+    wallet_address: Annotated[str, Depends(get_user_wallet_address)],
 ):
-    wallet_address = "0x41a539B1b75962d01C874ec6f960FCf57C41bD58"
 
     cur = conn.cursor()
-
     await cur.execute(
         """
         SELECT "ReferrerUser"."walletAddress"
