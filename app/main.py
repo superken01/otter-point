@@ -95,7 +95,7 @@ async def get_otter_point(
     referral_amount = 0
     await cur.execute(
         """
-        SELECT SUM(wvs.amount * vsb.rate / 1000000000000000000 * vsb.price / 100000000)
+        SELECT SUM(wvs.amount * vsb.rate / 1000000000000000000 * vsb.price / 100000000 * 0.2)
         FROM "User"
         JOIN "Referral" ON "User".id = "Referral"."referrerUserId"
         JOIN "User" AS "RefereeUser" ON "Referral"."refereeUserId" = "RefereeUser".id
