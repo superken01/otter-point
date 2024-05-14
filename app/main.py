@@ -10,16 +10,15 @@ from psycopg_pool import AsyncConnectionPool
 from pydantic import BaseModel
 
 JWT_SECRET = os.getenv("JWT_SECRET")
+WEB_URL = os.getenv("WEB_URL", "*")
 
 security = HTTPBearer()
 
 app = FastAPI(title="Otter Point")
 
-# TODO: allow_origins
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins="*",
-    allow_origin_regex=".*",
+    allow_origins=[WEB_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
