@@ -122,7 +122,7 @@ def main():
                 with conn.transaction():
                     cur.execute(
                         'INSERT INTO "SnapshotBlock" ("blockNumber", "timestamp") VALUES (%s, %s)',
-                        (block_number, datetime.fromtimestamp(timestamp, datetime.utc)),
+                        (block_number, datetime.fromtimestamp(timestamp)),
                     )
                 time.sleep(0.2)
 
