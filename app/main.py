@@ -86,9 +86,10 @@ async def get_otter_point(
 
     await cur.execute(
         f"""
-        SELECT SUM(amount * rate / 1000000000000000000 * price / 100000000)
+        SELECT SUM(amount * rate / (10 ^ decimals) * price / 100000000)
         FROM "WalletVaultSnapshot" AS wvs
         JOIN "VaultSnapshotBlock" AS vsb ON wvs."vaultSnapshotBlockId" = vsb.id
+        JOIN "Vault" AS v ON vsb."vaultId" = v.id
         WHERE wvs."address" = %s
         """,
         (wallet_address,),
@@ -99,12 +100,13 @@ async def get_otter_point(
     referral_amount = 0
     await cur.execute(
         """
-        SELECT SUM(wvs.amount * vsb.rate / 1000000000000000000 * vsb.price / 100000000 * 0.2)
+        SELECT SUM(wvs.amount * vsb.rate / (10 ^ v.decimals) * vsb.price / 100000000 * 0.2)
         FROM "User"
         JOIN "Referral" ON "User".id = "Referral"."referrerUserId"
         JOIN "User" AS "RefereeUser" ON "Referral"."refereeUserId" = "RefereeUser".id
         JOIN "WalletVaultSnapshot" AS wvs ON "RefereeUser"."walletAddress" = wvs."address"
         JOIN "VaultSnapshotBlock" AS vsb ON wvs."vaultSnapshotBlockId" = vsb.id
+        JOIN "Vault" AS v ON vsb."vaultId" = v.id
         JOIN "SnapshotBlock" AS sb ON vsb."snapshotBlockId" = sb.id
         WHERE "User"."walletAddress" = %s AND sb."timestamp" >= "Referral"."createdAt"
         """,
