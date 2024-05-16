@@ -99,7 +99,7 @@ def main():
         to_timestamp = int(time.time())
         to_timestamp = to_timestamp - (to_timestamp % 86400)
 
-        if from_timestamp < to_timestamp:
+        if from_timestamp <= to_timestamp:
             api_key = "V5BY34919KHPK7Q56GDV2R9NHB86519VNB"
             session = requests.Session()
 
@@ -122,7 +122,7 @@ def main():
                 with conn.transaction():
                     cur.execute(
                         'INSERT INTO "SnapshotBlock" ("blockNumber", "timestamp") VALUES (%s, %s)',
-                        (block_number, datetime.fromtimestamp(timestamp)),
+                        (block_number, datetime.fromtimestamp(timestamp, datetime.utc)),
                     )
                 time.sleep(0.2)
 
