@@ -152,6 +152,9 @@ async def set_referral_code(
     if not referee_user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
+    if referrer_user_id == referee_user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
     await cur.execute(
         'INSERT INTO "Referral" ("referrerUserId", "refereeUserId") VALUES (%s, %s)',
         (referrer_user_id, referee_user_id),
